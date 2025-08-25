@@ -4,12 +4,45 @@ import plotly.express as px
 from st_aggrid import AgGrid, GridOptionsBuilder
 from st_aggrid.shared import JsCode
 from datetime import datetime
+from sqlalchemy import create_engine
 
-
+# =========================
+# CONFIGURACIÓN INICIAL
+# =========================
 st.set_page_config(page_title="Dashboard Préstamos", layout="wide")
 
-# --- Cargar Excel ---
-df = pd.read_excel("prestamos.xlsx", sheet_name="Resumen")
+# --- Conexión a PostgreSQL ---
+db_host = "localhost"
+db_name = "mi_base"
+db_user = "mi_usuario"
+db_pass = "mi_contraseña"
+db_port = "5432"
+
+engine = create_engine(
+    f"postgresql+psycopg2://{db_user}:{db_pass}@{db_host}:{db_port}/{db_name}"
+)
+
+# =========================
+# CONSULTA DE DATOS
+# =========================
+query = """
+SELECT c.id, c.numero AS "Número",
+       c.fecha_pago AS "Fecha",
+       t.nombre AS "Nombre y Apellido",
+       t.campus AS "Campus",
+       c.principal AS "Principal",
+       c.interes AS "Interes",
+       c.comision AS "Comisión",
+       c.monto_total AS "Cuota",
+       c.estado AS "Estado",
+       c.cheque AS "Cheque",
+       p.fecha_inicio AS "Fecha de Inicio",
+       p.fecha_final AS "Fecha de Finalización"
+FROM cuota c
+JOIN prestamo p ON c.prestamo_id = p.id
+JOIN trabajador t ON p.trabajador_id = t.id
+"""
+df = pd.read_sql(query, engine)
 
 # --- Preprocesamiento general ---
 df["Fecha"] = pd.to_datetime(df["Fecha"], errors="coerce")
@@ -19,7 +52,9 @@ df["Estado"] = df["Estado"].astype(str)
 for col in ["Principal", "Interes", "Comisión", "Cuota"]:
     df[col] = pd.to_numeric(df[col], errors="coerce")
 
-# --- Sidebar filtros ---
+# =========================
+# SIDEBAR FILTROS
+# =========================
 st.sidebar.header("Filtros")
 estado = st.sidebar.multiselect("Estado", df["Estado"].unique(), default=df["Estado"].unique())
 campus = st.sidebar.multiselect("Campus", df["Campus"].unique(), default=df["Campus"].unique())
@@ -27,7 +62,9 @@ df_filtrado = df[(df["Estado"].isin(estado)) & (df["Campus"].isin(campus))]
 
 st.title("📊 Dashboard de Préstamos")
 
-# --- MÉTRICAS GENERALES ---
+# =========================
+# MÉTRICAS GENERALES
+# =========================
 total_prestado  = df_filtrado["Principal"].sum()
 total_interes   = df_filtrado["Interes"].sum()
 total_comision  = df_filtrado["Comisión"].sum()
@@ -41,7 +78,9 @@ c4.metric("Ganancias Totales",f"${gan_total:,.2f}")
 
 st.markdown("---")
 
-# --- Meses en español ---
+# =========================
+# RESUMEN MENSUAL
+# =========================
 meses_ingles  = ["January","February","March","April","May","June","July","August","September","October","November","December"]
 meses_espanol = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"]
 dic_meses     = dict(zip(meses_ingles, meses_espanol))
@@ -51,7 +90,6 @@ df_filtrado["Mes_Num"]  = df_filtrado["Fecha"].dt.month
 df_filtrado["Mes"]      = df_filtrado["Fecha"].dt.strftime("%B").map(dic_meses)
 df_filtrado["Mes"]      = pd.Categorical(df_filtrado["Mes"], categories=meses_espanol, ordered=True)
 
-# --- Resumen mensual (todos los años) ---
 resumen_mensual = (
     df_filtrado
       .groupby(["Año","Mes_Num","Mes"], observed=True)[["Interes","Comisión"]]
@@ -60,35 +98,24 @@ resumen_mensual = (
 )
 resumen_mensual["Total_Ganancias"] = resumen_mensual["Interes"] + resumen_mensual["Comisión"]
 resumen_mensual = resumen_mensual.sort_values(["Año","Mes_Num"])
-resumen_mensual["Mes_Año"] = (
-    resumen_mensual["Mes"].astype(str) + " " + resumen_mensual["Año"].astype(str)
-)
+resumen_mensual["Mes_Año"] = resumen_mensual["Mes"].astype(str) + " " + resumen_mensual["Año"].astype(str)
 
-# --- Selector de año con suma de ganancias ---
 anos_disponibles = sorted(resumen_mensual['Año'].unique())
 anio_actual      = datetime.now().year
 
-# Layout en columnas
-col1, col2 = st.columns([2,1])  # más espacio para el selectbox que para la suma
-
+col1, col2 = st.columns([2,1])
 with col1:
-    # Si el año actual está en la lista lo usamos como valor por defecto,
-    # si no, usamos el último disponible
     if anio_actual in anos_disponibles:
         ano_seleccionado = st.selectbox("Selecciona el Año", anos_disponibles, index=anos_disponibles.index(anio_actual))
     else:
         ano_seleccionado = st.selectbox("Selecciona el Año", anos_disponibles, index=len(anos_disponibles)-1)
 
-# Filtrar resumen por año seleccionado
 resumen_filtrado = resumen_mensual[resumen_mensual['Año'] == ano_seleccionado]
-
-# Calcular total de ganancias del año
 total_ganancias_anual = resumen_filtrado["Total_Ganancias"].sum()
 
 with col2:
     st.metric(label="💰 Total del Año", value=f"{total_ganancias_anual:,.2f}")
 
-# --- Gráfico ---
 fig_bar = px.bar(
     resumen_filtrado,
     x="Mes_Año",
@@ -103,10 +130,12 @@ st.plotly_chart(fig_bar, use_container_width=True)
 
 st.markdown("---")
 
-# --- MÉTRICAS ADICIONALES ---
-total_cuota_cancelada = df[df["Estado"]=="Cancelado"]["Cuota"].sum()
+# =========================
+# MÉTRICAS ADICIONALES
+# =========================
+total_cuota_cancelada = df[df["Estado"]=="Pagado"]["Cuota"].sum()
 Capital_Inicial       = 9000
-Ganancias_Entregadas  = 3698.24 - 3698.24
+Ganancias_Entregadas  = 0  # puedes ajustarlo si llevas control manual
 Efectivo              = total_cuota_cancelada + Capital_Inicial - total_prestado - Ganancias_Entregadas
 Pendiente_Recuperar   = df[df["Estado"]=="Pendiente"]["Cuota"].sum()
 
@@ -118,7 +147,9 @@ c4.metric("Rodrigo Gurdian",f"${Ganancias_Entregadas:,.2f}")
 
 st.markdown("---")
 
-# --- Detalle de Prestamos (solo pendientes + formato) ---
+# =========================
+# DETALLE DE PRÉSTAMOS
+# =========================
 st.subheader("📋 Detalle de Préstamos")
 
 df_detalle = df_filtrado[df_filtrado["Estado"]=="Pendiente"].copy()
@@ -143,7 +174,9 @@ AgGrid(df_detalle, gridOptions=tbl_opts, enable_enterprise_modules=True,
 
 st.markdown("---")
 
-# --- Resumen (Cuotas Pendientes por Campus y Alumno) ---
+# =========================
+# RESUMEN DE CUOTAS POR CAMPUS
+# =========================
 st.subheader("📊 Resumen de Cuotas Pendientes por Campus")
 
 df_pend = df_filtrado[df_filtrado["Estado"]=="Pendiente"][["Campus","Nombre y Apellido","Cuota"]].copy()
@@ -159,7 +192,6 @@ g.configure_column(
     aggFunc="sum",
     valueFormatter="function(params){return Number(params.value).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2});}"
 )
-# Ocultar columnas originales
 g.configure_columns(["Campus","Nombre y Apellido"], hide=True)
 
 g.configure_side_bar()
@@ -170,7 +202,9 @@ AgGrid(df_pend, gridOptions=summary_opts, enable_enterprise_modules=True,
 
 st.markdown("---")
 
-# --- Gráfico pastel: Ganancias por Campus ---
+# =========================
+# GRÁFICO PASTEL GANANCIAS POR CAMPUS
+# =========================
 gan_campus = df_filtrado.groupby("Campus")[["Interes","Comisión"]].sum().reset_index()
 gan_campus["Total_Ganancias"] = gan_campus["Interes"] + gan_campus["Comisión"]
 
@@ -189,4 +223,3 @@ fig_pie.update_traces(
 )
 fig_pie.update_layout(title_font_size=24, height=700)
 st.plotly_chart(fig_pie, use_container_width=True)
-
