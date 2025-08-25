@@ -13,9 +13,9 @@ st.set_page_config(page_title="Dashboard Préstamos", layout="wide")
 
 # --- Conexión a PostgreSQL ---
 db_host = "localhost"
-db_name = "mi_base"
-db_user = "mi_usuario"
-db_pass = "mi_contraseña"
+db_name = "prestamos_db"
+db_user = "postgres"
+db_pass = "12345678Jmvp"
 db_port = "5432"
 
 engine = create_engine(
