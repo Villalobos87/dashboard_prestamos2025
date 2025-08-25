@@ -38,9 +38,9 @@ SELECT c.id, c.numero AS "Número",
        c.cheque AS "Cheque",
        p.fecha_inicio AS "Fecha de Inicio",
        p.fecha_final AS "Fecha de Finalización"
-FROM cuota c
-JOIN prestamo p ON c.prestamo_id = p.id
-JOIN trabajador t ON p.trabajador_id = t.id
+FROM prestamos_cuota c
+JOIN prestamos_prestamo p ON c.prestamo_id = p.id
+JOIN prestamos_trabajador t ON p.trabajador_id = t.id;
 """
 df = pd.read_sql(query, engine)
 
