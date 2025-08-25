@@ -6,6 +6,12 @@ from st_aggrid.shared import JsCode
 from datetime import datetime
 from sqlalchemy import create_engine
 
+try:
+    from sqlalchemy import create_engine
+    print("SQLAlchemy OK")
+except Exception as e:
+    print("SQLAlchemy ERROR:", e)
+
 # =========================
 # CONFIGURACIÓN INICIAL
 # =========================
