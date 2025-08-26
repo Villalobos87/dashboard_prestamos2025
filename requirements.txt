@@ -3,6 +3,6 @@ pandas
 openpyxl
 plotly
 streamlit-aggrid
-sqlalchemy
+SQLAlchemy
 psycopg2-binary
 numpy
