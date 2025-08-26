@@ -1,9 +1,14 @@
 #!/bin/bash
-# Forzar desinstalación de cualquier SQLAlchemy instalada
+
+echo "💡 Limpiando e instalando dependencias..."
+
+# Desinstalar cualquier versión previa de SQLAlchemy
 pip uninstall -y sqlalchemy SQLAlchemy
 
-# Instalar la versión correcta
+# Instalar SQLAlchemy correcto
 pip install SQLAlchemy==2.0.23
 
 # Instalar el resto de dependencias
-pip install -r requirements.txt 
+pip install --upgrade --force-reinstall -r requirements.txt
+
+echo "✅ Dependencias instaladas correctamente" 

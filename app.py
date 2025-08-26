@@ -5,6 +5,7 @@ import plotly.express as px
 from st_aggrid import AgGrid, GridOptionsBuilder
 from st_aggrid.shared import JsCode
 from datetime import datetime
+from sqlalchemy import create_engine
 
 # 🔹 Verificación de SQLAlchemy
 try:

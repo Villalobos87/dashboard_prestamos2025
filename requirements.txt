@@ -3,7 +3,7 @@ streamlit==1.27.0
 
 # Base de datos
 SQLAlchemy==2.0.23
-psycopg2-binary==2.9.9  # Para PostgreSQL
+psycopg2-binary==2.9.9
 
 # Manipulación de datos
 pandas==2.1.0
