@@ -11,16 +11,18 @@ from sqlalchemy import create_engine
 # =========================
 st.set_page_config(page_title="Dashboard Préstamos", layout="wide")
 
-# --- Conexión a PostgreSQL ---
-db_host = "localhost"
-db_name = "prestamos_db"
-db_user = "postgres"
-db_pass = "12345678Jmvp"
-db_port = "5432"
+# --- Conexión a PostgreSQL usando Secrets ---
+db_user = st.secrets["postgres"]["DB_USER"]
+db_pass = st.secrets["postgres"]["DB_PASS"]
+db_host = st.secrets["postgres"]["DB_HOST"]
+db_port = st.secrets["postgres"]["DB_PORT"]
+db_name = st.secrets["postgres"]["DB_NAME"]
 
 engine = create_engine(
     f"postgresql+psycopg2://{db_user}:{db_pass}@{db_host}:{db_port}/{db_name}"
 )
+
+st.success("✅ Conexión establecida con PostgreSQL en Render")
 
 # =========================
 # CONSULTA DE DATOS
@@ -135,7 +137,7 @@ st.markdown("---")
 # =========================
 total_cuota_cancelada = df[df["Estado"]=="Pagado"]["Cuota"].sum()
 Capital_Inicial       = 9000
-Ganancias_Entregadas  = 0  # puedes ajustarlo si llevas control manual
+Ganancias_Entregadas  = 0
 Efectivo              = total_cuota_cancelada + Capital_Inicial - total_prestado - Ganancias_Entregadas
 Pendiente_Recuperar   = df[df["Estado"]=="Pendiente"]["Cuota"].sum()
 
@@ -151,7 +153,6 @@ st.markdown("---")
 # DETALLE DE PRÉSTAMOS
 # =========================
 st.subheader("📋 Detalle de Préstamos")
-
 df_detalle = df_filtrado[df_filtrado["Estado"]=="Pendiente"].copy()
 df_detalle["Fecha"] = df_detalle["Fecha"].dt.strftime("%Y-%m-%d")
 for col in ["Principal","Comisión","Interes","Cuota"]:
@@ -175,35 +176,7 @@ AgGrid(df_detalle, gridOptions=tbl_opts, enable_enterprise_modules=True,
 st.markdown("---")
 
 # =========================
-# RESUMEN DE CUOTAS POR CAMPUS
-# =========================
-st.subheader("📊 Resumen de Cuotas Pendientes por Campus")
-
-df_pend = df_filtrado[df_filtrado["Estado"]=="Pendiente"][["Campus","Nombre y Apellido","Cuota"]].copy()
-g = GridOptionsBuilder.from_dataframe(df_pend)
-g.configure_default_column(enablePivot=True, enableValue=True, enableRowGroup=True,
-                           filter=True, sortable=True, resizable=True)
-
-g.configure_column("Campus", rowGroup=True,  rowGroupIndex=0)
-g.configure_column("Nombre y Apellido", rowGroup=True, rowGroupIndex=1)
-g.configure_column(
-    "Cuota",
-    value=True,
-    aggFunc="sum",
-    valueFormatter="function(params){return Number(params.value).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2});}"
-)
-g.configure_columns(["Campus","Nombre y Apellido"], hide=True)
-
-g.configure_side_bar()
-summary_opts = g.build()
-
-AgGrid(df_pend, gridOptions=summary_opts, enable_enterprise_modules=True, 
-       fit_columns_on_grid_load=True, allow_unsafe_jscode=True, theme="alpine", height=500)
-
-st.markdown("---")
-
-# =========================
-# GRÁFICO PASTEL GANANCIAS POR CAMPUS
+# GRÁFICO DE GANANCIAS POR CAMPUS
 # =========================
 gan_campus = df_filtrado.groupby("Campus")[["Interes","Comisión"]].sum().reset_index()
 gan_campus["Total_Ganancias"] = gan_campus["Interes"] + gan_campus["Comisión"]
