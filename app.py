@@ -5,11 +5,15 @@ from st_aggrid import AgGrid, GridOptionsBuilder
 from st_aggrid.shared import JsCode
 from datetime import datetime
 from sqlalchemy import create_engine
+from streamlit_autorefresh import st_autorefresh   # ✅ Import correcto
 
 # =========================
 # CONFIGURACIÓN INICIAL
 # =========================
 st.set_page_config(page_title="Dashboard Préstamos", layout="wide")
+
+# 🔄 Auto-refresco cada 30 segundos
+count = st_autorefresh(interval=30 * 1000, limit=None, key="datarefresh")
 
 # --- Conexión a PostgreSQL usando Secrets ---
 DB_USER = "djangouser"
@@ -22,8 +26,8 @@ engine = create_engine(
     f"postgresql+psycopg2://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}?sslmode=require"
 )
 
-
 st.success("✅ Conexión establecida con PostgreSQL en Render")
+st.caption(f"🔄 Datos actualizados automáticamente cada 30 segundos (recarga #{count})")
 
 # =========================
 # CONSULTA DE DATOS
