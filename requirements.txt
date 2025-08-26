@@ -1,13 +1,20 @@
-# Dependencias principales
+# Streamlit
 streamlit==1.27.0
+
+# Base de datos
 SQLAlchemy==2.0.23
-psycopg2-binary==2.9.9  # Para conectar con PostgreSQL
+psycopg2-binary==2.9.9  # Para PostgreSQL
+
+# Manipulación de datos
 pandas==2.1.0
 numpy==1.26.5
 
-# Si usas matplotlib o gráficos
+# Gráficos
 matplotlib==3.8.0
 plotly==5.17.0
 
-# Para otras utilidades
-python-dotenv==1.0.1  # Manejar variables de entorno
+# Seguridad / Hashing (si lo necesitas)
+bcrypt==4.1.0
+
+# Variables de entorno
+python-dotenv==1.0.1
