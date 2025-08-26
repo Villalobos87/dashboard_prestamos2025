@@ -19,8 +19,9 @@ db_port = st.secrets["postgres"]["DB_PORT"]
 db_name = st.secrets["postgres"]["DB_NAME"]
 
 engine = create_engine(
-    f"postgresql+psycopg2://{db_user}:{db_pass}@{db_host}:{db_port}/{db_name}"
+    f"postgresql+psycopg2://{db_user}:{db_pass}@{db_host}:{db_port}/{db_name}?sslmode=require"
 )
+
 
 st.success("✅ Conexión establecida con PostgreSQL en Render")
 
