@@ -12,14 +12,14 @@ from sqlalchemy import create_engine
 st.set_page_config(page_title="Dashboard Préstamos", layout="wide")
 
 # --- Conexión a PostgreSQL usando Secrets ---
-db_user = st.secrets["postgres"]["DB_USER"]
-db_pass = st.secrets["postgres"]["DB_PASS"]
-db_host = st.secrets["postgres"]["DB_HOST"]
-db_port = st.secrets["postgres"]["DB_PORT"]
-db_name = st.secrets["postgres"]["DB_NAME"]
+DB_USER = "djangouser"
+DB_PASS = "mHihqeccaRH1CMjB4jJZj1wZSVwHoO8j"
+DB_HOST = "dpg-d27r7r63jp1c73fllgr0-a.oregon-postgres.render.com"
+DB_PORT = "5432"
+DB_NAME = "djangocrud_har8"
 
 engine = create_engine(
-    f"postgresql+psycopg2://{db_user}:{db_pass}@{db_host}:{db_port}/{db_name}?sslmode=require"
+    f"postgresql+psycopg2://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}?sslmode=require"
 )
 
 
