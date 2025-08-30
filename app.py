@@ -63,8 +63,8 @@ for col in ["Principal", "Interes", "Comisión", "Cuota"]:
 # SIDEBAR FILTROS
 # =========================
 st.sidebar.header("Filtros")
-estado = st.multiselect("Estado", df["Estado"].unique(), default=df["Estado"].unique())
-campus = st.multiselect("Campus", df["Campus"].unique(), default=df["Campus"].unique())
+estado = st.sidebar.multiselect("Estado", df["Estado"].unique(), default=df["Estado"].unique())
+campus = st.sidebar.multiselect("Campus", df["Campus"].unique(), default=df["Campus"].unique())
 df_filtrado = df[(df["Estado"].isin(estado)) & (df["Campus"].isin(campus))]
 
 st.title("📊 Dashboard de Préstamos")
