@@ -168,15 +168,31 @@ df_detalle  = df_detalle.drop(columns=[c for c in cols_quitar if c in df_detalle
 
 g = GridOptionsBuilder.from_dataframe(df_detalle)
 g.configure_default_column(filter=True, sortable=True, resizable=True, editable=False)
+
+# Estilo de la columna Estado
 g.configure_column(
     "Estado",
-    cellStyle=JsCode("function(params){return {'backgroundColor':'#FFF3CD','color':'#856404'};}"))
+    cellStyle=JsCode("function(params){return {'backgroundColor':'#FFF3CD','color':'#856404'};}")
+)
+
+# Aumentar ancho de columnas específicas
+g.configure_column("Nombre y Apellido", minWidth=250)
+g.configure_column("Campus", minWidth=150)
+g.configure_column("Fecha", minWidth=120)
+
 g.configure_side_bar()
 g.configure_pagination(paginationPageSize=20)
 tbl_opts = g.build()
 
-AgGrid(df_detalle, gridOptions=tbl_opts, enable_enterprise_modules=True,
-       fit_columns_on_grid_load=True, allow_unsafe_jscode=True, theme="alpine", height=500)
+AgGrid(
+    df_detalle, 
+    gridOptions=tbl_opts, 
+    enable_enterprise_modules=True,
+    fit_columns_on_grid_load=True, 
+    allow_unsafe_jscode=True, 
+    theme="alpine", 
+    height=500
+)
 
 st.markdown("---")
 
