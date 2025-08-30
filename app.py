@@ -177,6 +177,7 @@ g.configure_column(
 
 # Aumentar ancho de columnas específicas
 g.configure_column("id", minWidth=100)
+g.configure_column("número", minWidth=100)
 g.configure_column("Nombre y Apellido", minWidth=250)
 g.configure_column("Campus", minWidth=150)
 g.configure_column("Fecha", minWidth=120)
