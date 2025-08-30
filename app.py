@@ -179,6 +179,12 @@ g.configure_column(
 g.configure_column("Nombre y Apellido", minWidth=250)
 g.configure_column("Campus", minWidth=150)
 g.configure_column("Fecha", minWidth=120)
+g.configure_column("Principal", minWidth=120)
+g.configure_column("Comisión", minWidth=120)
+g.configure_column("Interes", minWidth=120)
+g.configure_column("Cuota", minWidth=120)
+g.configure_column("Estado", minWidth=120)
+
 
 g.configure_side_bar()
 g.configure_pagination(paginationPageSize=20)
