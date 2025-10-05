@@ -229,38 +229,44 @@ st.plotly_chart(fig_pie, use_container_width=True)
 # 📋 RESUMEN POR TRABAJADOR
 # =========================
 st.markdown("---")
-st.subheader("📋 Resumen por Trabajador")
+st.subheader("📋 Resumen de Prestamos")
 
-# Calcular métricas por trabajador
+# Calcular métricas por trabajador usando el ID único
 resumen_trabajador = (
     df_filtrado.groupby("Nombre y Apellido", observed=True)
     .agg(
-        Prestamos_Prestados=("Número", "nunique"),          # cantidad de préstamos únicos
         Cuotas_Pendientes=("Estado", lambda x: (x == "Pendiente").sum()),
         Total_Prestado=("Principal", "sum"),
-        Interes=("Interes", "sum"),
-        Comision=("Comisión", "sum")
+        Total_Interes=("Interes", "sum"),
+        Total_Comision=("Comisión", "sum")
     )
     .reset_index()
 )
 
-# Calcular total de ganancias (interes + comisión)
-resumen_trabajador["Total_Ganancias"] = resumen_trabajador["Interes"] + resumen_trabajador["Comision"]
+# Calcular total de ganancias
+resumen_trabajador["Total_Ganancias"] = (
+    resumen_trabajador["Total_Interes"] + resumen_trabajador["Total_Comision"]
+)
 
-# Formatear valores
-for col in ["Total_Prestado", "Total_Ganancias"]:
-    resumen_trabajador[col] = resumen_trabajador[col].map(lambda x: f"${x:,.2f}")
+# Formatear valores numéricos
+resumen_trabajador["Total_Prestado"] = resumen_trabajador["Total_Prestado"].map(lambda x: f"${x:,.2f}")
+resumen_trabajador["Total_Ganancias"] = resumen_trabajador["Total_Ganancias"].map(lambda x: f"${x:,.2f}")
 
-resumen_trabajador = resumen_trabajador.drop(columns=["Interes", "Comision"])
+# Eliminar columnas intermedias
+resumen_trabajador = resumen_trabajador.drop(columns=["Total_Interes", "Total_Comision"])
 
-# Mostrar tabla
+# 🔽 Ordenar por Cuotas_Pendientes descendente
+resumen_trabajador = resumen_trabajador.sort_values(by="Cuotas_Pendientes", ascending=False)
+
+# =====================
+# 📊 Mostrar Tabla con AgGrid
+# =====================
 g_trab = GridOptionsBuilder.from_dataframe(resumen_trabajador)
 g_trab.configure_default_column(filter=True, sortable=True, resizable=True, editable=False)
 g_trab.configure_column("Nombre y Apellido", minWidth=250)
-g_trab.configure_column("Prestamos_Prestados", headerName="Préstamos", minWidth=130)
 g_trab.configure_column("Cuotas_Pendientes", headerName="Cuotas Pendientes", minWidth=150)
-g_trab.configure_column("Total_Prestado", headerName="Total Prestado", minWidth=150)
-g_trab.configure_column("Total_Ganancias", headerName="Total Ganancias", minWidth=150)
+g_trab.configure_column("Total_Prestado", headerName="💰 Total Prestado", minWidth=150)
+g_trab.configure_column("Total_Ganancias", headerName="📈 Total Ganancias", minWidth=150)
 tbl_trab = g_trab.build()
 
 AgGrid(
@@ -272,3 +278,4 @@ AgGrid(
     theme="alpine",
     height=500
 )
+
