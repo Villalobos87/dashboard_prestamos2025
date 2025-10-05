@@ -238,8 +238,37 @@ resumen_trabajador = (
         Prestamos_Prestados=("Número", "nunique"),          # cantidad de préstamos únicos
         Cuotas_Pendientes=("Estado", lambda x: (x == "Pendiente").sum()),
         Total_Prestado=("Principal", "sum"),
-        Total_Ganancias=(lambda x: df_filtrado.loc[x.index, "Interes"].sum() +
-                                      df_filtrado.loc[x.index, "Comisión"].sum())
+        Interes=("Interes", "sum"),
+        Comision=("Comisión", "sum")
     )
     .reset_index()
+)
+
+# Calcular total de ganancias (interes + comisión)
+resumen_trabajador["Total_Ganancias"] = resumen_trabajador["Interes"] + resumen_trabajador["Comision"]
+
+# Formatear valores
+for col in ["Total_Prestado", "Total_Ganancias"]:
+    resumen_trabajador[col] = resumen_trabajador[col].map(lambda x: f"${x:,.2f}")
+
+resumen_trabajador = resumen_trabajador.drop(columns=["Interes", "Comision"])
+
+# Mostrar tabla
+g_trab = GridOptionsBuilder.from_dataframe(resumen_trabajador)
+g_trab.configure_default_column(filter=True, sortable=True, resizable=True, editable=False)
+g_trab.configure_column("Nombre y Apellido", minWidth=250)
+g_trab.configure_column("Prestamos_Prestados", headerName="Préstamos", minWidth=130)
+g_trab.configure_column("Cuotas_Pendientes", headerName="Cuotas Pendientes", minWidth=150)
+g_trab.configure_column("Total_Prestado", headerName="Total Prestado", minWidth=150)
+g_trab.configure_column("Total_Ganancias", headerName="Total Ganancias", minWidth=150)
+tbl_trab = g_trab.build()
+
+AgGrid(
+    resumen_trabajador,
+    gridOptions=tbl_trab,
+    enable_enterprise_modules=True,
+    fit_columns_on_grid_load=True,
+    allow_unsafe_jscode=True,
+    theme="alpine",
+    height=500
 )
