@@ -224,3 +224,22 @@ fig_pie.update_traces(
 )
 fig_pie.update_layout(title_font_size=24, height=700)
 st.plotly_chart(fig_pie, use_container_width=True)
+
+# =========================
+# 📋 RESUMEN POR TRABAJADOR
+# =========================
+st.markdown("---")
+st.subheader("📋 Resumen por Trabajador")
+
+# Calcular métricas por trabajador
+resumen_trabajador = (
+    df_filtrado.groupby("Nombre y Apellido", observed=True)
+    .agg(
+        Prestamos_Prestados=("Número", "nunique"),          # cantidad de préstamos únicos
+        Cuotas_Pendientes=("Estado", lambda x: (x == "Pendiente").sum()),
+        Total_Prestado=("Principal", "sum"),
+        Total_Ganancias=(lambda x: df_filtrado.loc[x.index, "Interes"].sum() +
+                                      df_filtrado.loc[x.index, "Comisión"].sum())
+    )
+    .reset_index()
+)
