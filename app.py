@@ -141,8 +141,8 @@ st.markdown("---")
 # MÉTRICAS ADICIONALES
 # =========================
 total_cuota_cancelada = df[df["Estado"]=="Pagado"]["Cuota"].sum()
-Capital_Inicial       = 9000
-Ganancias_Entregadas  = 0
+Capital_Inicial       = 9000-2000
+Ganancias_Entregadas  = 4664.94
 Efectivo              = total_cuota_cancelada + Capital_Inicial - total_prestado - Ganancias_Entregadas
 Pendiente_Recuperar   = df[df["Estado"]=="Pendiente"]["Cuota"].sum()
 
@@ -263,10 +263,10 @@ resumen_trabajador = resumen_trabajador.sort_values(by="Cuotas_Pendientes", asce
 # =====================
 g_trab = GridOptionsBuilder.from_dataframe(resumen_trabajador)
 g_trab.configure_default_column(filter=True, sortable=True, resizable=True, editable=False)
-g_trab.configure_column("Nombre y Apellido", minWidth=250)
-g_trab.configure_column("Cuotas_Pendientes", headerName="Cuotas Pendientes", minWidth=150)
-g_trab.configure_column("Total_Prestado", headerName="💰 Total Prestado", minWidth=150)
-g_trab.configure_column("Total_Ganancias", headerName="📈 Total Ganancias", minWidth=150)
+g_trab.configure_column("Nombre y Apellido", minWidth=350)
+g_trab.configure_column("Cuotas_Pendientes", headerName="Cuotas Pendientes", minWidth=200)
+g_trab.configure_column("Total_Prestado", headerName="💰 Total Prestado", minWidth=200)
+g_trab.configure_column("Total_Ganancias", headerName="📈 Total Ganancias", minWidth=200)
 tbl_trab = g_trab.build()
 
 AgGrid(
