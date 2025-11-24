@@ -12,8 +12,8 @@ from streamlit_autorefresh import st_autorefresh   # ✅ Import correcto
 # =========================
 st.set_page_config(page_title="Dashboard Préstamos", layout="wide")
 
-# 🔄 Auto-refresco cada 30 segundos
-count = st_autorefresh(interval=30 * 1000, limit=None, key="datarefresh")
+# 🔄 Auto-refresco cada 50 segundos
+count = st_autorefresh(interval=50 * 1000, limit=None, key="datarefresh")
 
 # --- Conexión a PostgreSQL usando Secrets ---
 DB_USER = "djangouser"
