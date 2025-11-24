@@ -263,8 +263,8 @@ resumen_trabajador = resumen_trabajador.sort_values(by="Cuotas_Pendientes", asce
 # =====================
 g_trab = GridOptionsBuilder.from_dataframe(resumen_trabajador)
 g_trab.configure_default_column(filter=True, sortable=True, resizable=True, editable=False)
-g_trab.configure_column("Nombre y Apellido", minWidth=350)
 g_trab.configure_column("Cuotas_Pendientes", headerName="Cuotas Pendientes", minWidth=200)
+g_trab.configure_column("Nombre y Apellido", minWidth=350)
 g_trab.configure_column("Total_Prestado", headerName="💰 Total Prestado", minWidth=200)
 g_trab.configure_column("Total_Ganancias", headerName="📈 Total Ganancias", minWidth=200)
 tbl_trab = g_trab.build()
