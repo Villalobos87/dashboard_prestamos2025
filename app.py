@@ -258,9 +258,20 @@ resumen_trabajador = resumen_trabajador.drop(columns=["Total_Interes", "Total_Co
 # 🔽 Ordenar por Cuotas_Pendientes descendente
 resumen_trabajador = resumen_trabajador.sort_values(by="Cuotas_Pendientes", ascending=False)
 
+# 🔁 REORDENAR COLUMNAS (Cuotas Pendientes primero)
+resumen_trabajador = resumen_trabajador[
+    [
+        "Cuotas_Pendientes",
+        "Nombre y Apellido",
+        "Total_Prestado",
+        "Total_Ganancias"
+    ]
+]
+
 # =====================
 # 📊 Mostrar Tabla con AgGrid
 # =====================
+
 g_trab = GridOptionsBuilder.from_dataframe(resumen_trabajador)
 g_trab.configure_default_column(filter=True, sortable=True, resizable=True, editable=False)
 g_trab.configure_column("Cuotas_Pendientes", headerName="Cuotas Pendientes", minWidth=200)
