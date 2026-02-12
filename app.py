@@ -155,7 +155,7 @@ c4.metric("Rodrigo Gurdian",f"${Ganancias_Entregadas:,.2f}")
 st.markdown("---")
 
 # =========================
-# DETALLE DE PRÉSTAMOS.
+# DETALLE DE PRÉSTAMOS
 # =========================
 st.subheader("📋 Detalle de Préstamos")
 df_detalle = df_filtrado[df_filtrado["Estado"]=="Pendiente"].copy()
