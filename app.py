@@ -290,3 +290,46 @@ AgGrid(
     height=500
 )
 
+# =========================
+# COMPARATIVO AÑO vs AÑO
+# =========================
+st.markdown("---")
+st.subheader("📊 Comparativo de Ganancias por Año")
+
+# Filtrar años 2025 y 2026
+comparativo_anual = (
+    resumen_mensual[resumen_mensual["Año"].isin([2025, 2026])]
+    .groupby("Año")[["Total_Ganancias"]]
+    .sum()
+    .reset_index()
+)
+
+# =========================
+# MÉTRICAS
+# =========================
+
+total_2025 = comparativo_anual[comparativo_anual["Año"] == 2025]["Total_Ganancias"].sum()
+total_2026 = comparativo_anual[comparativo_anual["Año"] == 2026]["Total_Ganancias"].sum()
+
+c1, c2 = st.columns(2)
+
+c1.metric("Ganancias 2025", f"${total_2025:,.2f}")
+c2.metric("Ganancias 2026", f"${total_2026:,.2f}")
+
+# =========================
+# GRÁFICO COMPARATIVO
+# =========================
+
+fig_compare_year = px.bar(
+    comparativo_anual,
+    x="Año",
+    y="Total_Ganancias",
+    text="Total_Ganancias",
+    color="Año",
+    title="📈 Comparación de Ganancias 2025 vs 2026"
+)
+
+fig_compare_year.update_traces(texttemplate="%{text:,.2f}", textposition="outside")
+fig_compare_year.update_layout(height=500, showlegend=False)
+
+st.plotly_chart(fig_compare_year, use_container_width=True)
