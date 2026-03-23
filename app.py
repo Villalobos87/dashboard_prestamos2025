@@ -335,34 +335,45 @@ fig_compare_year.update_layout(height=500, showlegend=False)
 st.plotly_chart(fig_compare_year, use_container_width=True)
 
 # =========================
-# 📋 PLAN DE PRÉSTAMOS (ESTILIZADO)
+# 📋 PLAN DE PRÉSTAMOS (ESTILIZADO PRO)
 # =========================
 st.markdown("---")
 st.subheader("📊 Planes de Préstamos")
 
 data_planes = {
-    "💰 Valor del Préstamo": [500, 450, 400, 350, 300, 250, 200, 150, 100, 50],
-    "📅 Plazo (Meses)": [5.5, 5.5, 5, 4.5, 4, 3.5, 3.5, 3, 3, 2],
-    "🔢 Cuotas": [11, 11, 10, 9, 8, 7, 7, 6, 6, 4],
-    "💵 Cuota Quincenal": [57.50, 51.75, 50.00, 48.03, 45.75, 43.04, 34.43, 29.75, 19.83, 14.50]
+    "Valor": [500, 450, 400, 350, 300, 250, 200, 150, 100, 50],
+    "Plazo (Meses)": [5.5, 5.5, 5, 4.5, 4, 3.5, 3.5, 3, 3, 2],
+    "Cuotas": [11, 11, 10, 9, 8, 7, 7, 6, 6, 4],
+    "Cuota Quincenal": [57.50, 51.75, 50.00, 48.03, 45.75, 43.04, 34.43, 29.75, 19.83, 14.50]
 }
 
 df_planes = pd.DataFrame(data_planes)
 
-# 🎨 Formatear valores
-df_planes["💰 Valor del Préstamo"] = df_planes["💰 Valor del Préstamo"].map(lambda x: f"${x:,.2f}")
-df_planes["💵 Cuota Quincenal"] = df_planes["💵 Cuota Quincenal"].map(lambda x: f"${x:,.2f}")
+# ✅ ORDENAR PRIMERO (NUMÉRICO)
+df_planes = df_planes.sort_values(by="Valor", ascending=False)
 
-# 🧠 Crear descripción automática
-df_planes["📌 Detalle"] = df_planes.apply(
-    lambda row: f"{row['🔢 Cuotas']} cuotas de {row['💵 Cuota Quincenal']} quincenal",
+# 🧠 CREAR DETALLE (ANTES DE FORMATEAR)
+df_planes["Detalle"] = df_planes.apply(
+    lambda row: f"{row['Cuotas']} cuotas de ${row['Cuota Quincenal']:,.2f} quincenal",
     axis=1
 )
 
-# Ordenar
-df_planes = df_planes.sort_values(by="💰 Valor del Préstamo", ascending=False)
+# 🎨 FORMATEAR PARA VISUAL
+df_planes["💰 Valor del Préstamo"] = df_planes["Valor"].map(lambda x: f"${x:,.2f}")
+df_planes["💵 Cuota Quincenal"] = df_planes["Cuota Quincenal"].map(lambda x: f"${x:,.2f}")
 
-# 🎯 Mostrar tabla estilizada
+# 🧹 SELECCIONAR COLUMNAS FINALES (ORDENADAS Y LIMPIAS)
+df_planes = df_planes[
+    [
+        "💰 Valor del Préstamo",
+        "Plazo (Meses)",
+        "Cuotas",
+        "💵 Cuota Quincenal",
+        "Detalle"
+    ]
+]
+
+# 🎯 MOSTRAR TABLA
 st.dataframe(
     df_planes,
     use_container_width=True,
