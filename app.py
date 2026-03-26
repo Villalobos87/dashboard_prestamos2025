@@ -141,7 +141,7 @@ st.markdown("---")
 # MÉTRICAS ADICIONALES
 # =========================
 total_cuota_cancelada = df[df["Estado"]=="Pagado"]["Cuota"].sum()
-Capital_Inicial       = 13500
+Capital_Inicial       = 14000
 Ganancias_Entregadas  = 6247.73
 Efectivo              = total_cuota_cancelada + Capital_Inicial - total_prestado - Ganancias_Entregadas
 Pendiente_Recuperar   = df[df["Estado"]=="Pendiente"]["Cuota"].sum()
@@ -338,7 +338,7 @@ st.plotly_chart(fig_compare_year, use_container_width=True)
 # 📋 PLAN DE PRÉSTAMOS (ESTILIZADO PRO)
 # =========================
 st.markdown("---")
-st.subheader("📊 Planes de Préstamos")
+st.subheader("📊 Plan de Préstamos")
 
 data_planes = {
     "Valor": [500, 450, 400, 350, 300, 250, 200, 150, 100, 50],
@@ -349,20 +349,23 @@ data_planes = {
 
 df_planes = pd.DataFrame(data_planes)
 
-# ✅ ORDENAR PRIMERO (NUMÉRICO)
+# ✅ Asegurar que Cuotas sea entero (ELIMINA 11.0)
+df_planes["Cuotas"] = df_planes["Cuotas"].astype(int)
+
+# ✅ ORDENAR PRIMERO
 df_planes = df_planes.sort_values(by="Valor", ascending=False)
 
-# 🧠 CREAR DETALLE (ANTES DE FORMATEAR)
+# 🧠 DETALLE LIMPIO
 df_planes["Detalle"] = df_planes.apply(
     lambda row: f"{row['Cuotas']} cuotas de ${row['Cuota Quincenal']:,.2f} quincenal",
     axis=1
 )
 
-# 🎨 FORMATEAR PARA VISUAL
+# 🎨 FORMATO VISUAL
 df_planes["💰 Valor del Préstamo"] = df_planes["Valor"].map(lambda x: f"${x:,.2f}")
 df_planes["💵 Cuota Quincenal"] = df_planes["Cuota Quincenal"].map(lambda x: f"${x:,.2f}")
 
-# 🧹 SELECCIONAR COLUMNAS FINALES (ORDENADAS Y LIMPIAS)
+# 🧹 COLUMNAS FINALES
 df_planes = df_planes[
     [
         "💰 Valor del Préstamo",
@@ -372,6 +375,20 @@ df_planes = df_planes[
         "Detalle"
     ]
 ]
+
+# =========================
+# 🎨 ESTILO HOVER (CSS)
+# =========================
+st.markdown("""
+<style>
+/* Hover sobre filas */
+div[data-testid="stDataFrame"] tbody tr:hover {
+    background-color: #262730 !important;
+    color: #00E5FF !important;
+    cursor: pointer;
+}
+</style>
+""", unsafe_allow_html=True)
 
 # 🎯 MOSTRAR TABLA
 st.dataframe(
