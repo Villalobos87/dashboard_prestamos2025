@@ -12,6 +12,7 @@ from streamlit_autorefresh import st_autorefresh   # ✅ Import correcto
 # =========================
 st.set_page_config(page_title="Dashboard Préstamos", layout="wide")
 
+
 # 🔄 Auto-refresco cada 50 segundos
 count = st_autorefresh(interval=50 * 1000, limit=None, key="datarefresh")
 
@@ -78,10 +79,10 @@ total_comision  = df_filtrado["Comisión"].sum()
 gan_total       = total_interes + total_comision
 
 c1,c2,c3,c4 = st.columns(4)
-c1.metric("Total Prestado"   ,f"${total_prestado:,.2f}")
-c2.metric("Total Comisión"   ,f"${total_comision:,.2f}")
-c3.metric("Total Interés"    ,f"${total_interes:,.2f}")
-c4.metric("Ganancias Totales",f"${gan_total:,.2f}")
+c1.metric("💰 Total Prestado"   ,f"${total_prestado:,.2f}")
+c2.metric("💸 Total Comisión"   ,f"${total_comision:,.2f}")
+c3.metric("📈 Total Interés"    ,f"${total_interes:,.2f}")
+c4.metric("🔥 Ganancias Totales",f"${gan_total:,.2f}")
 
 st.markdown("---")
 
@@ -147,10 +148,10 @@ Efectivo              = total_cuota_cancelada + Capital_Inicial - total_prestado
 Pendiente_Recuperar   = df[df["Estado"]=="Pendiente"]["Cuota"].sum()
 
 c1,c2,c3,c4 = st.columns(4)
-c1.metric("Yanina Orochena",f"${Efectivo:,.2f}")
-c2.metric("Por Recuperar" ,f"${Pendiente_Recuperar:,.2f}")
-c3.metric("Capital"       ,f"${Capital_Inicial:,.2f}")
-c4.metric("Rodrigo Gurdian",f"${Ganancias_Entregadas:,.2f}")
+c1.metric("💵 Yanina Orochena",f"${Efectivo:,.2f}")
+c2.metric("⏳ Por Recuperar" ,f"${Pendiente_Recuperar:,.2f}")
+c3.metric("💼 Capital"       ,f"${Capital_Inicial:,.2f}")
+c4.metric("📤 Rodrigo Gurdian",f"${Ganancias_Entregadas:,.2f}")
 
 st.markdown("---")
 
