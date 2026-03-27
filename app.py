@@ -311,10 +311,21 @@ comparativo_anual = (
 total_2025 = comparativo_anual[comparativo_anual["Año"] == 2025]["Total_Ganancias"].sum()
 total_2026 = comparativo_anual[comparativo_anual["Año"] == 2026]["Total_Ganancias"].sum()
 
+# Diferencia
+diferencia = total_2026 - total_2025
+
 c1, c2 = st.columns(2)
 
-c1.metric("Ganancias 2025", f"${total_2025:,.2f}")
-c2.metric("Ganancias 2026", f"${total_2026:,.2f}")
+c1.metric(
+    "Ganancias 2025",
+    f"${total_2025:,.2f}"
+)
+
+c2.metric(
+    "Ganancias 2026",
+    f"${total_2026:,.2f}",
+    f"{diferencia:,.2f}"  # 👈 esto activa la flecha automática
+)
 
 # =========================
 # GRÁFICO COMPARATIVO
