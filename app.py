@@ -19,7 +19,7 @@ count = st_autorefresh(interval=50 * 1000, limit=None, key="datarefresh")
 # --- Conexión a PostgreSQL usando Secrets ---
 DB_USER = "djangouser"
 DB_PASS = "mHihqeccaRH1CMjB4jJZj1wZSVwHoO8j"
-DB_HOST = "dpg-d27r7r63jp1c73fllgr0-a.oregon-postgres.render.com"
+DB_HOST = "dpg-d765klea2pns73eh70b0-a.oregon-postgres.render.com"
 DB_PORT = "5432"
 DB_NAME = "djangocrud_har8_xhoj"
 
