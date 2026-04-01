@@ -21,7 +21,7 @@ DB_USER = "djangouser"
 DB_PASS = "mHihqeccaRH1CMjB4jJZj1wZSVwHoO8j"
 DB_HOST = "dpg-d27r7r63jp1c73fllgr0-a.oregon-postgres.render.com"
 DB_PORT = "5432"
-DB_NAME = "djangocrud_har8"
+DB_NAME = "djangocrud_har8_xhoj"
 
 engine = create_engine(
     f"postgresql+psycopg2://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}?sslmode=require"
@@ -142,7 +142,7 @@ st.markdown("---")
 # MÉTRICAS ADICIONALES
 # =========================
 total_cuota_cancelada = df[df["Estado"]=="Pagado"]["Cuota"].sum()
-Capital_Inicial       = 14500.00
+Capital_Inicial       = 15000.00
 Ganancias_Entregadas  = 6247.73
 Efectivo              = total_cuota_cancelada + Capital_Inicial - total_prestado - Ganancias_Entregadas
 Pendiente_Recuperar   = df[df["Estado"]=="Pendiente"]["Cuota"].sum()
