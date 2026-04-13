@@ -361,13 +361,27 @@ data_planes = {
 
 df_planes = pd.DataFrame(data_planes)
 
-# ✅ Asegurar que Cuotas sea entero (ELIMINA 11.0)
+# ✅ Asegurar entero
 df_planes["Cuotas"] = df_planes["Cuotas"].astype(int)
 
-# ✅ ORDENAR PRIMERO
+# =========================
+# 🧠 CÁLCULO DE TASA MENSUAL
+# =========================
+df_planes["Interés"] = (df_planes["Cuota Quincenal"] * df_planes["Cuotas"]) - df_planes["Valor"]
+
+df_planes["Tasa Mensual (%)"] = (
+    df_planes["Interés"] / (df_planes["Valor"] * df_planes["Plazo (Meses)"])
+) * 100
+
+# redondeo bonito
+df_planes["Tasa Mensual (%)"] = df_planes["Tasa Mensual (%)"].round(2)
+
+# =========================
+# ORDENAR
+# =========================
 df_planes = df_planes.sort_values(by="Valor", ascending=False)
 
-# 🧠 DETALLE LIMPIO
+# 🧠 DETALLE
 df_planes["Detalle"] = df_planes.apply(
     lambda row: f"{row['Cuotas']} cuotas de ${row['Cuota Quincenal']:,.2f} quincenal",
     axis=1
@@ -376,6 +390,7 @@ df_planes["Detalle"] = df_planes.apply(
 # 🎨 FORMATO VISUAL
 df_planes["💰 Valor del Préstamo"] = df_planes["Valor"].map(lambda x: f"${x:,.2f}")
 df_planes["💵 Cuota Quincenal"] = df_planes["Cuota Quincenal"].map(lambda x: f"${x:,.2f}")
+df_planes["📈 Tasa Mensual"] = df_planes["Tasa Mensual (%)"].map(lambda x: f"{x:.2f}%")
 
 # 🧹 COLUMNAS FINALES
 df_planes = df_planes[
@@ -384,6 +399,7 @@ df_planes = df_planes[
         "Plazo (Meses)",
         "Cuotas",
         "💵 Cuota Quincenal",
+        "📈 Tasa Mensual",
         "Detalle"
     ]
 ]
@@ -393,7 +409,6 @@ df_planes = df_planes[
 # =========================
 st.markdown("""
 <style>
-/* Hover sobre filas */
 div[data-testid="stDataFrame"] tbody tr:hover {
     background-color: #262730 !important;
     color: #00E5FF !important;
@@ -402,7 +417,9 @@ div[data-testid="stDataFrame"] tbody tr:hover {
 </style>
 """, unsafe_allow_html=True)
 
+# =========================
 # 🎯 MOSTRAR TABLA
+# =========================
 st.dataframe(
     df_planes,
     use_container_width=True,
