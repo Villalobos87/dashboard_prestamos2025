@@ -142,7 +142,7 @@ st.markdown("---")
 # MÉTRICAS ADICIONALES
 # =========================
 total_cuota_cancelada = df[df["Estado"]=="Pagado"]["Cuota"].sum()
-Capital_Inicial       = 15000
+Capital_Inicial       = 15000.00
 Ganancias_Entregadas  = 6247.73
 Efectivo              = total_cuota_cancelada + Capital_Inicial - total_prestado - Ganancias_Entregadas
 Pendiente_Recuperar   = df[df["Estado"]=="Pendiente"]["Cuota"].sum()
@@ -383,7 +383,7 @@ df_planes = df_planes.sort_values(by="Valor", ascending=False)
 
 # 🧠 DETALLE
 df_planes["Detalle"] = df_planes.apply(
-    lambda row: f"{row['Cuotas']} cuotas de ${row['Cuota Quincenal']:,.2f} quincenal",
+    lambda row: f"💰 ${row['Valor']:,.2f} | ⏳ {row['Plazo (Meses)']} meses | 📆 {row['Cuotas']} cuotas de ${row['Cuota Quincenal']:,.2f}"
     axis=1
 )
 
