@@ -383,7 +383,7 @@ df_planes = df_planes.sort_values(by="Valor", ascending=False)
 
 # 🧠 DETALLE
 df_planes["Detalle"] = df_planes.apply(
-    lambda row: f"💰 ${row['Valor']:,.2f} | ⏳ {row['Plazo (Meses)']} meses | 📆 {row['Cuotas']} cuotas de ${row['Cuota Quincenal']:,.2f}"
+    lambda row: f"💰 ${row['Valor']:,.2f} | ⏳ {row['Plazo (Meses)']} meses | 📆 {row['Cuotas']} cuotas de ${row['Cuota Quincenal']:,.2f}",
     axis=1
 )
 
