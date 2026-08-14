@@ -143,7 +143,7 @@ st.markdown("---")
 # =========================
 total_cuota_cancelada = df[df["Estado"]=="Pagado"]["Cuota"].sum()
 Capital_Inicial       = 13000.00
-Ganancias_Entregadas  = 11964.44
+Ganancias_Entregadas  = 11964.43
 Efectivo              = total_cuota_cancelada + Capital_Inicial - total_prestado - Ganancias_Entregadas
 Pendiente_Recuperar   = df[df["Estado"]=="Pendiente"]["Cuota"].sum()
 
