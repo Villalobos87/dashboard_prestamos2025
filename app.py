@@ -34,21 +34,26 @@ st.caption(f"🔄 Datos actualizados automáticamente cada 30 segundos (recarga 
 # CONSULTA DE DATOS
 # =========================
 query = """
-SELECT c.id, c.numero AS "Número",
-       c.fecha_pago AS "Fecha",
-       t.nombre AS "Nombre y Apellido",
-       t.campus AS "Campus",
-       c.principal AS "Principal",
-       c.interes AS "Interes",
-       c.comision AS "Comisión",
-       c.monto_total AS "Cuota",
-       c.estado AS "Estado",
-       c.cheque AS "Cheque",
-       p.fecha_inicio AS "Fecha de Inicio",
-       p.fecha_final AS "Fecha de Finalización"
-FROM prestamos_cuota c
-JOIN prestamos_prestamo p ON c.prestamo_id = p.id
-JOIN prestamos_trabajador t ON p.trabajador_id = t.id;
+SELECT 
+       c.id AS "ID Cuota",
+       p.id AS "ID Prestamo",
+       c.numero AS "Número", 
+       c.fecha_pago AS "Fecha", 
+       t.nombre AS "Nombre y Apellido", 
+       t.campus AS "Campus", 
+       c.principal AS "Principal", 
+       c.interes AS "Interes", 
+       c.comision AS "Comisión", 
+       c.monto_total AS "Cuota", 
+       c.estado AS "Estado", 
+       c.cheque AS "Cheque", 
+       p.fecha_inicio AS "Fecha de Inicio", 
+       p.fecha_final AS "Fecha de Finalización" 
+FROM prestamos_cuota c 
+JOIN prestamos_prestamo p 
+     ON c.prestamo_id = p.id 
+JOIN prestamos_trabajador t 
+     ON p.trabajador_id = t.id;
 """
 df = pd.read_sql(query, engine)
 
@@ -230,66 +235,530 @@ st.plotly_chart(fig_pie, use_container_width=True)
 # 📋 RESUMEN POR TRABAJADOR
 # =========================
 st.markdown("---")
-st.subheader("📋 Resumen de Prestamos")
+st.subheader("📋 Resumen de Préstamos")
 
-# Calcular métricas por trabajador usando el ID único
+
+# ==========================================================
+# 🪟 VENTANA EMERGENTE - HISTORIAL
+# ==========================================================
+@st.dialog("📋 Historial de Préstamos", width="large")
+def mostrar_historial(trabajador):
+
+    st.markdown(f"## 👤 {trabajador}")
+
+    # Buscar todos los registros del trabajador
+    historial = df[
+        df["Nombre y Apellido"] == trabajador
+    ].copy()
+
+    if historial.empty:
+        st.warning("No se encontraron préstamos para este trabajador.")
+        return
+
+    # ======================================================
+    # MÉTRICAS
+    # ======================================================
+
+    total_prestado = historial["Principal"].sum()
+    total_interes = historial["Interes"].sum()
+    total_comision = historial["Comisión"].sum()
+    total_cuotas = historial["Cuota"].sum()
+
+    cuotas_pagadas = (
+        historial["Estado"] == "Pagado"
+    ).sum()
+
+    cuotas_pendientes = (
+        historial["Estado"] == "Pendiente"
+    ).sum()
+
+    c1, c2, c3, c4 = st.columns(4)
+
+    c1.metric(
+        "💰 Total Prestado",
+        f"${total_prestado:,.2f}"
+    )
+
+    c2.metric(
+        "📈 Total Interés",
+        f"${total_interes:,.2f}"
+    )
+
+    c3.metric(
+        "💵 Total Comisión",
+        f"${total_comision:,.2f}"
+    )
+
+    c4.metric(
+        "💳 Total Cuotas",
+        f"${total_cuotas:,.2f}"
+    )
+
+    st.markdown("---")
+
+    c5, c6 = st.columns(2)
+
+    c5.metric(
+        "✅ Cuotas Pagadas",
+        cuotas_pagadas
+    )
+
+    c6.metric(
+        "⏳ Cuotas Pendientes",
+        cuotas_pendientes
+    )
+
+    st.markdown("---")
+
+    # ======================================================
+    # HISTORIAL DE PRÉSTAMOS
+    # ======================================================
+
+    st.markdown("### 💼 Préstamos")
+
+    prestamos = (
+    historial[
+        [
+            "ID Prestamo",
+            "Fecha de Inicio",
+            "Fecha de Finalización"
+        ]
+    ]
+    .drop_duplicates()
+    .copy()
+)
+
+    # ======================================================
+    # MOSTRAR CADA PRÉSTAMO
+    # ======================================================
+
+    for _, prestamo in prestamos.iterrows():
+
+        id_prestamo = prestamo["ID Prestamo"]
+
+        fecha_inicio = prestamo["Fecha de Inicio"]
+        fecha_final = prestamo["Fecha de Finalización"]
+
+        cuotas_prestamo = historial[
+            historial["ID Prestamo"] == id_prestamo
+        ].copy()
+
+        principal = cuotas_prestamo["Principal"].sum()
+        interes = cuotas_prestamo["Interes"].sum()
+        comision = cuotas_prestamo["Comisión"].sum()
+        cuota_total = cuotas_prestamo["Cuota"].sum()
+
+        pagadas = (
+            cuotas_prestamo["Estado"] == "Pagado"
+        ).sum()
+
+        pendientes = (
+            cuotas_prestamo["Estado"] == "Pendiente"
+        ).sum()
+
+        # ==================================================
+        # EXPANDER
+        # ==================================================
+
+        with st.expander(
+            f"📄 Préstamo #{id_prestamo}",
+            expanded=False
+        ):
+
+            c1, c2, c3, c4 = st.columns(4)
+
+            c1.metric(
+                "💰 Principal",
+                f"${principal:,.2f}"
+            )
+
+            c2.metric(
+                "📈 Interés",
+                f"${interes:,.2f}"
+            )
+
+            c3.metric(
+                "💵 Comisión",
+                f"${comision:,.2f}"
+            )
+
+            c4.metric(
+                "💳 Cuotas",
+                f"${cuota_total:,.2f}"
+            )
+
+            st.markdown("---")
+
+            c1, c2 = st.columns(2)
+
+            c1.write(
+                f"📅 **Inicio:** {fecha_inicio}"
+            )
+
+            c2.write(
+                f"📅 **Finalización:** {fecha_final}"
+            )
+
+            st.markdown("---")
+
+            c1, c2 = st.columns(2)
+
+            c1.metric(
+                "✅ Pagadas",
+                pagadas
+            )
+
+            c2.metric(
+                "⏳ Pendientes",
+                pendientes
+            )
+
+            st.markdown("#### 📋 Detalle de Cuotas")
+
+            detalle = cuotas_prestamo.copy()
+
+            # ----------------------------------------------
+            # FORMATO FECHA
+            # ----------------------------------------------
+
+            detalle["Fecha"] = pd.to_datetime(
+                detalle["Fecha"],
+                errors="coerce"
+            ).dt.strftime("%Y-%m-%d")
+
+            # ----------------------------------------------
+            # COLUMNAS
+            # ----------------------------------------------
+
+            columnas = [
+                "Número",
+                "Fecha",
+                "Principal",
+                "Interes",
+                "Comisión",
+                "Cuota",
+                "Estado",
+                "Cheque"
+            ]
+
+            columnas = [
+                col
+                for col in columnas
+                if col in detalle.columns
+            ]
+
+            detalle = detalle[columnas]
+
+            # ----------------------------------------------
+            # FORMATO DINERO
+            # ----------------------------------------------
+
+            for col in [
+                "Principal",
+                "Interes",
+                "Comisión",
+                "Cuota"
+            ]:
+
+                if col in detalle.columns:
+
+                    detalle[col] = detalle[col].apply(
+                        lambda x:
+                            f"${x:,.2f}"
+                            if pd.notna(x)
+                            else "$0.00"
+                    )
+
+            st.dataframe(
+                detalle,
+                use_container_width=True,
+                hide_index=True
+            )
+
+
+# ==========================================================
+# 🧮 RESUMEN POR TRABAJADOR
+# ==========================================================
+
 resumen_trabajador = (
-    df_filtrado.groupby("Nombre y Apellido", observed=True)
+    df_filtrado
+    .groupby(
+        "Nombre y Apellido",
+        observed=True
+    )
     .agg(
-        Cuotas_Pendientes=("Estado", lambda x: (x == "Pendiente").sum()),
-        Total_Prestado=("Principal", "sum"),
-        Total_Interes=("Interes", "sum"),
-        Total_Comision=("Comisión", "sum")
+
+        Cuotas_Pendientes=(
+            "Estado",
+            lambda x: (x == "Pendiente").sum()
+        ),
+
+        Total_Prestado=(
+            "Principal",
+            "sum"
+        ),
+
+        Total_Interes=(
+            "Interes",
+            "sum"
+        ),
+
+        Total_Comision=(
+            "Comisión",
+            "sum"
+        )
     )
     .reset_index()
 )
 
-# Calcular total de ganancias
+
+# ==========================================================
+# 📈 TOTAL GANANCIAS
+# ==========================================================
+
 resumen_trabajador["Total_Ganancias"] = (
-    resumen_trabajador["Total_Interes"] + resumen_trabajador["Total_Comision"]
+    resumen_trabajador["Total_Interes"]
+    +
+    resumen_trabajador["Total_Comision"]
 )
 
-# Formatear valores numéricos
-resumen_trabajador["Total_Prestado"] = resumen_trabajador["Total_Prestado"].map(lambda x: f"${x:,.2f}")
-resumen_trabajador["Total_Ganancias"] = resumen_trabajador["Total_Ganancias"].map(lambda x: f"${x:,.2f}")
 
-# Eliminar columnas intermedias
-resumen_trabajador = resumen_trabajador.drop(columns=["Total_Interes", "Total_Comision"])
+# ==========================================================
+# 💰 FORMATO DINERO
+# ==========================================================
 
-# 🔽 Ordenar por Cuotas_Pendientes descendente
-resumen_trabajador = resumen_trabajador.sort_values(by="Cuotas_Pendientes", ascending=False)
+resumen_trabajador["Total_Prestado"] = (
+    resumen_trabajador["Total_Prestado"]
+    .apply(lambda x: f"${x:,.2f}")
+)
 
-# 🔁 REORDENAR COLUMNAS (Cuotas Pendientes primero)
+resumen_trabajador["Total_Ganancias"] = (
+    resumen_trabajador["Total_Ganancias"]
+    .apply(lambda x: f"${x:,.2f}")
+)
+
+
+# ==========================================================
+# 🧹 ELIMINAR COLUMNAS
+# ==========================================================
+
+resumen_trabajador = resumen_trabajador.drop(
+    columns=[
+        "Total_Interes",
+        "Total_Comision"
+    ]
+)
+
+
+# ==========================================================
+# 🔽 ORDENAR
+# ==========================================================
+
+resumen_trabajador = resumen_trabajador.sort_values(
+    by="Cuotas_Pendientes",
+    ascending=False
+)
+
+
+# ==========================================================
+# 📋 COLUMNA HISTORIAL
+# ==========================================================
+
+resumen_trabajador["Historial"] = "📋 Ver"
+
+
+# ==========================================================
+# 🔁 ORDENAR COLUMNAS
+# ==========================================================
+
 resumen_trabajador = resumen_trabajador[
     [
         "Cuotas_Pendientes",
         "Nombre y Apellido",
         "Total_Prestado",
-        "Total_Ganancias"
+        "Total_Ganancias",
+        "Historial"
     ]
 ]
 
-# =====================
-# 📊 Mostrar Tabla con AgGrid
-# =====================
 
-g_trab = GridOptionsBuilder.from_dataframe(resumen_trabajador)
-g_trab.configure_default_column(filter=True, sortable=True, resizable=True, editable=False)
-g_trab.configure_column("Cuotas_Pendientes", headerName="Cuotas Pendientes", minWidth=200)
-g_trab.configure_column("Nombre y Apellido", minWidth=350)
-g_trab.configure_column("Total_Prestado", headerName="💰 Total Prestado", minWidth=200)
-g_trab.configure_column("Total_Ganancias", headerName="📈 Total Ganancias", minWidth=200)
+# ==========================================================
+# 🎨 AGGRID
+# ==========================================================
+
+g_trab = GridOptionsBuilder.from_dataframe(
+    resumen_trabajador
+)
+
+g_trab.configure_default_column(
+    filter=True,
+    sortable=True,
+    resizable=True,
+    editable=False
+)
+
+
+g_trab.configure_column(
+    "Cuotas_Pendientes",
+    headerName="Cuotas Pendientes",
+    minWidth=200
+)
+
+g_trab.configure_column(
+    "Nombre y Apellido",
+    headerName="Nombre y Apellido",
+    minWidth=350
+)
+
+g_trab.configure_column(
+    "Total_Prestado",
+    headerName="💰 Total Prestado",
+    minWidth=200
+)
+
+g_trab.configure_column(
+    "Total_Ganancias",
+    headerName="📈 Total Ganancias",
+    minWidth=200
+)
+
+
+# ==========================================================
+# 🔘 BOTÓN VER
+# ==========================================================
+
+g_trab.configure_column(
+    "Historial",
+    headerName="📋 Historial",
+    minWidth=140,
+    maxWidth=160,
+    sortable=False,
+    filter=False,
+
+    cellRenderer=JsCode(
+        """
+        class ButtonRenderer {
+
+            init(params) {
+
+                this.eGui = document.createElement('button');
+
+                this.eGui.innerHTML = '📋 Ver';
+
+                this.eGui.style.padding = '5px 15px';
+                this.eGui.style.cursor = 'pointer';
+                this.eGui.style.border = 'none';
+                this.eGui.style.borderRadius = '5px';
+                this.eGui.style.fontWeight = 'bold';
+
+                this.eGui.addEventListener(
+                    'click',
+                    function() {
+
+                        params.node.setSelected(true);
+
+                    }
+                );
+            }
+
+            getGui() {
+                return this.eGui;
+            }
+        }
+        """
+    )
+)
+
+
+# ==========================================================
+# ☑️ SELECCIÓN
+# ==========================================================
+
+g_trab.configure_selection(
+    selection_mode="single",
+    use_checkbox=False
+)
+
+
+# ==========================================================
+# PAGINACIÓN
+# ==========================================================
+
+g_trab.configure_pagination(
+    paginationPageSize=20
+)
+
+
 tbl_trab = g_trab.build()
 
-AgGrid(
+
+# ==========================================================
+# 📊 MOSTRAR TABLA
+# ==========================================================
+
+respuesta_trabajadores = AgGrid(
+
     resumen_trabajador,
+
     gridOptions=tbl_trab,
+
     enable_enterprise_modules=True,
+
     fit_columns_on_grid_load=True,
+
     allow_unsafe_jscode=True,
+
     theme="alpine",
-    height=500
+
+    height=500,
+
+    update_on=["selectionChanged"]
 )
+
+
+# ==========================================================
+# 🪟 DETECTAR TRABAJADOR SELECCIONADO
+# ==========================================================
+
+filas_seleccionadas = respuesta_trabajadores.get(
+    "selected_rows"
+)
+
+
+# ==========================================================
+# ⚠️ IMPORTANTE:
+# selected_rows puede ser DataFrame
+# ==========================================================
+
+if filas_seleccionadas is not None:
+
+    if isinstance(filas_seleccionadas, pd.DataFrame):
+
+        if not filas_seleccionadas.empty:
+
+            trabajador_seleccionado = (
+                filas_seleccionadas.iloc[0][
+                    "Nombre y Apellido"
+                ]
+            )
+
+            mostrar_historial(
+                trabajador_seleccionado
+            )
+
+    else:
+
+        if len(filas_seleccionadas) > 0:
+
+            trabajador_seleccionado = (
+                filas_seleccionadas[0][
+                    "Nombre y Apellido"
+                ]
+            )
+
+            mostrar_historial(
+                trabajador_seleccionado
+            )
 
 # =========================
 # COMPARATIVO AÑO vs AÑO
