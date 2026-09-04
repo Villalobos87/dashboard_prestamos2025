@@ -768,11 +768,12 @@ st.markdown("---")
 st.subheader("📊 Reporte de Ganancias por Campus y Año")
 
 
-# Crear copia
+# ==========================================================
+# CREAR GANANCIAS
+# ==========================================================
+
 df_reporte = df_filtrado.copy()
 
-
-# Ganancia = Interés + Comisión
 df_reporte["Ganancias"] = (
     df_reporte["Interes"] +
     df_reporte["Comisión"]
@@ -792,8 +793,7 @@ reporte_ganancias = (
 
 
 # ==========================================================
-# CONVERTIR A TABLA:
-# CAMPUS | 2025 | 2026 | 2027
+# CONVERTIR A TABLA
 # ==========================================================
 
 reporte_ganancias = (
@@ -809,13 +809,18 @@ reporte_ganancias = (
 
 
 # ==========================================================
-# TOTAL POR CAMPUS
+# COLUMNAS DE AÑOS
 # ==========================================================
 
 columnas_anios = [
     col for col in reporte_ganancias.columns
     if col != "Campus"
 ]
+
+
+# ==========================================================
+# TOTAL POR CAMPUS
+# ==========================================================
 
 reporte_ganancias["TOTAL"] = (
     reporte_ganancias[columnas_anios].sum(axis=1)
@@ -826,7 +831,9 @@ reporte_ganancias["TOTAL"] = (
 # TOTAL GENERAL
 # ==========================================================
 
-fila_total = {"Campus": "TOTAL GENERAL"}
+fila_total = {
+    "Campus": "TOTAL GENERAL"
+}
 
 for columna in columnas_anios:
     fila_total[columna] = reporte_ganancias[columna].sum()
@@ -844,16 +851,75 @@ reporte_ganancias = pd.concat(
 
 
 # ==========================================================
-# FORMATO DE DINERO
+# FUNCIÓN PARA COLOCAR SEMÁFOROS
 # ==========================================================
 
-for columna in reporte_ganancias.columns:
+def semaforo(valor, valores):
     
-    if columna != "Campus":
-        reporte_ganancias[columna] = (
-            reporte_ganancias[columna]
-            .map(lambda x: f"${x:,.2f}")
-        )
+    valores = valores.sort_values(ascending=False).tolist()
+
+    # Solo un campus
+    if len(valores) == 1:
+        return f"🟢 ${valor:,.2f}"
+
+    # Mayor
+    if valor == valores[0]:
+        return f"🟢 ${valor:,.2f}"
+
+    # Menor
+    if valor == valores[-1]:
+        return f"🔴 ${valor:,.2f}"
+
+    # Intermedio
+    return f"🟡 ${valor:,.2f}"
+
+
+# ==========================================================
+# APLICAR SEMÁFOROS A CADA AÑO
+# ==========================================================
+
+cantidad_campus = len(reporte_ganancias) - 1
+
+
+for columna in columnas_anios + ["TOTAL"]:
+    
+    valores = reporte_ganancias.loc[
+        :cantidad_campus - 1,
+        columna
+    ]
+
+    reporte_ganancias.loc[
+        :cantidad_campus - 1,
+        columna
+    ] = reporte_ganancias.loc[
+        :cantidad_campus - 1,
+        columna
+    ].apply(
+        lambda x: semaforo(x, valores)
+    )
+
+
+# ==========================================================
+# FORMATEAR TOTAL GENERAL
+# ==========================================================
+
+fila_total_index = len(reporte_ganancias) - 1
+
+for columna in columnas_anios + ["TOTAL"]:
+    
+    valor = (
+        reporte_ganancias.loc[
+            fila_total_index,
+            columna
+        ]
+    )
+
+    # Si ya fuera texto, no hacemos nada
+    if not isinstance(valor, str):
+        reporte_ganancias.loc[
+            fila_total_index,
+            columna
+        ] = f"${valor:,.2f}"
 
 
 # ==========================================================
