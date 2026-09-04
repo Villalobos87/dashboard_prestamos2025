@@ -760,102 +760,99 @@ if filas_seleccionadas is not None:
                 trabajador_seleccionado
             )
 
-# =========================
-# COMPARATIVO AÑO vs AÑO
-# =========================
+# ==========================================================
+# 📊 REPORTE DE GANANCIAS POR AÑO Y CAMPUS
+# ==========================================================
+
 st.markdown("---")
-st.subheader("📊 Comparativo de Ganancias por Año")
-
-# El año seleccionado en la gráfica mensual
-anio_actual = ano_seleccionado
-
-# El año anterior automáticamente
-anio_anterior = anio_actual - 1
+st.subheader("📊 Reporte de Ganancias por Año y Campus")
 
 
-# =========================
-# FILTRAR LOS DOS AÑOS
-# =========================
+# Crear ganancias
+df_reporte = df_filtrado.copy()
 
-comparativo_anual = (
-    resumen_mensual[
-        resumen_mensual["Año"].isin([anio_anterior, anio_actual])
-    ]
-    .groupby("Año")[["Total_Ganancias"]]
-    .sum()
+df_reporte["Ganancias"] = (
+    df_reporte["Interes"]
+    + df_reporte["Comisión"]
+)
+
+
+# ==========================================================
+# AGRUPAR POR AÑO Y CAMPUS
+# ==========================================================
+
+reporte_ganancias = (
+    df_reporte
+    .groupby(["Año", "Campus"])
+    .agg(
+        Total_Prestado=("Principal", "sum"),
+        Total_Interes=("Interes", "sum"),
+        Total_Comision=("Comisión", "sum"),
+        Total_Ganancias=("Ganancias", "sum")
+    )
     .reset_index()
 )
 
-# =========================
-# MÉTRICAS
-# =========================
 
-total_anio_anterior = comparativo_anual[
-    comparativo_anual["Año"] == anio_anterior
-]["Total_Ganancias"].sum()
+# ==========================================================
+# ORDENAR
+# ==========================================================
 
-total_anio_actual = comparativo_anual[
-    comparativo_anual["Año"] == anio_actual
-]["Total_Ganancias"].sum()
-
-
-# Diferencia
-diferencia = total_anio_actual - total_anio_anterior
-
-
-# Porcentaje de crecimiento
-if total_anio_anterior != 0:
-    porcentaje = (diferencia / total_anio_anterior) * 100
-else:
-    porcentaje = 0
-
-
-# =========================
-# MÉTRICAS EN PANTALLA
-# =========================
-
-c1, c2 = st.columns(2)
-
-c1.metric(
-    f"Ganancias {anio_anterior}",
-    f"${total_anio_anterior:,.2f}"
-)
-
-c2.metric(
-    f"Ganancias {anio_actual}",
-    f"${total_anio_actual:,.2f}",
-    f"{diferencia:,.2f} ({porcentaje:+.2f}%)"
+reporte_ganancias = reporte_ganancias.sort_values(
+    by=["Año", "Campus"]
 )
 
 
-# =========================
-# GRÁFICO COMPARATIVO
-# =========================
+# ==========================================================
+# FORMATO DE DINERO
+# ==========================================================
 
-fig_compare_year = px.bar(
-    comparativo_anual,
-    x="Año",
-    y="Total_Ganancias",
-    text="Total_Ganancias",
-    color="Año",
-    title=f"📈 Comparación de Ganancias {anio_anterior} vs {anio_actual}"
+reporte_ganancias["Total_Prestado"] = (
+    reporte_ganancias["Total_Prestado"]
+    .map(lambda x: f"${x:,.2f}")
 )
 
-fig_compare_year.update_traces(
-    texttemplate="$%{text:,.2f}",
-    textposition="outside"
+reporte_ganancias["Total_Interes"] = (
+    reporte_ganancias["Total_Interes"]
+    .map(lambda x: f"${x:,.2f}")
 )
 
-fig_compare_year.update_layout(
-    height=500,
-    showlegend=False
+reporte_ganancias["Total_Comision"] = (
+    reporte_ganancias["Total_Comision"]
+    .map(lambda x: f"${x:,.2f}")
 )
 
-st.plotly_chart(
-    fig_compare_year,
-    use_container_width=True
+reporte_ganancias["Total_Ganancias"] = (
+    reporte_ganancias["Total_Ganancias"]
+    .map(lambda x: f"${x:,.2f}")
 )
 
+
+# ==========================================================
+# RENOMBRAR COLUMNAS
+# ==========================================================
+
+reporte_ganancias = reporte_ganancias.rename(
+    columns={
+        "Año": "Año",
+        "Campus": "Campus",
+        "Total_Prestado": "💰 Total Prestado",
+        "Total_Interes": "📈 Interés",
+        "Total_Comision": "💸 Comisión",
+        "Total_Ganancias": "🔥 Ganancias"
+    }
+)
+
+
+# ==========================================================
+# MOSTRAR TABLA
+# ==========================================================
+
+st.dataframe(
+    reporte_ganancias,
+    use_container_width=True,
+    hide_index=True
+)
 
 
 # =========================
