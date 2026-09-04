@@ -761,45 +761,85 @@ if filas_seleccionadas is not None:
             )
 
 # ==========================================================
-# 📊 REPORTE DE GANANCIAS POR AÑO Y CAMPUS
+# 📊 REPORTE DE GANANCIAS POR CAMPUS Y AÑO
 # ==========================================================
 
 st.markdown("---")
-st.subheader("📊 Reporte de Ganancias por Año y Campus")
+st.subheader("📊 Reporte de Ganancias por Campus y Año")
 
 
-# Crear ganancias
+# Crear copia
 df_reporte = df_filtrado.copy()
 
+
+# Ganancia = Interés + Comisión
 df_reporte["Ganancias"] = (
-    df_reporte["Interes"]
-    + df_reporte["Comisión"]
+    df_reporte["Interes"] +
+    df_reporte["Comisión"]
 )
 
 
 # ==========================================================
-# AGRUPAR POR AÑO Y CAMPUS
+# AGRUPAR CAMPUS + AÑO
 # ==========================================================
 
 reporte_ganancias = (
     df_reporte
-    .groupby(["Año", "Campus"])
-    .agg(
-        Total_Prestado=("Principal", "sum"),
-        Total_Interes=("Interes", "sum"),
-        Total_Comision=("Comisión", "sum"),
-        Total_Ganancias=("Ganancias", "sum")
-    )
+    .groupby(["Campus", "Año"])["Ganancias"]
+    .sum()
     .reset_index()
 )
 
 
 # ==========================================================
-# ORDENAR
+# CONVERTIR A TABLA:
+# CAMPUS | 2025 | 2026 | 2027
 # ==========================================================
 
-reporte_ganancias = reporte_ganancias.sort_values(
-    by=["Año", "Campus"]
+reporte_ganancias = (
+    reporte_ganancias
+    .pivot(
+        index="Campus",
+        columns="Año",
+        values="Ganancias"
+    )
+    .fillna(0)
+    .reset_index()
+)
+
+
+# ==========================================================
+# TOTAL POR CAMPUS
+# ==========================================================
+
+columnas_anios = [
+    col for col in reporte_ganancias.columns
+    if col != "Campus"
+]
+
+reporte_ganancias["TOTAL"] = (
+    reporte_ganancias[columnas_anios].sum(axis=1)
+)
+
+
+# ==========================================================
+# TOTAL GENERAL
+# ==========================================================
+
+fila_total = {"Campus": "TOTAL GENERAL"}
+
+for columna in columnas_anios:
+    fila_total[columna] = reporte_ganancias[columna].sum()
+
+fila_total["TOTAL"] = reporte_ganancias["TOTAL"].sum()
+
+
+reporte_ganancias = pd.concat(
+    [
+        reporte_ganancias,
+        pd.DataFrame([fila_total])
+    ],
+    ignore_index=True
 )
 
 
@@ -807,41 +847,13 @@ reporte_ganancias = reporte_ganancias.sort_values(
 # FORMATO DE DINERO
 # ==========================================================
 
-reporte_ganancias["Total_Prestado"] = (
-    reporte_ganancias["Total_Prestado"]
-    .map(lambda x: f"${x:,.2f}")
-)
-
-reporte_ganancias["Total_Interes"] = (
-    reporte_ganancias["Total_Interes"]
-    .map(lambda x: f"${x:,.2f}")
-)
-
-reporte_ganancias["Total_Comision"] = (
-    reporte_ganancias["Total_Comision"]
-    .map(lambda x: f"${x:,.2f}")
-)
-
-reporte_ganancias["Total_Ganancias"] = (
-    reporte_ganancias["Total_Ganancias"]
-    .map(lambda x: f"${x:,.2f}")
-)
-
-
-# ==========================================================
-# RENOMBRAR COLUMNAS
-# ==========================================================
-
-reporte_ganancias = reporte_ganancias.rename(
-    columns={
-        "Año": "Año",
-        "Campus": "Campus",
-        "Total_Prestado": "💰 Total Prestado",
-        "Total_Interes": "📈 Interés",
-        "Total_Comision": "💸 Comisión",
-        "Total_Ganancias": "🔥 Ganancias"
-    }
-)
+for columna in reporte_ganancias.columns:
+    
+    if columna != "Campus":
+        reporte_ganancias[columna] = (
+            reporte_ganancias[columna]
+            .map(lambda x: f"${x:,.2f}")
+        )
 
 
 # ==========================================================
