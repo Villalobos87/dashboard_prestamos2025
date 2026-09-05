@@ -951,7 +951,7 @@ reporte_ganancias = pd.concat(
 # ==========================================================
 
 def semaforo(valor, valores):
-    
+
     valores = valores.sort_values(ascending=False).tolist()
 
     # Solo un campus
@@ -971,20 +971,34 @@ def semaforo(valor, valores):
 
 
 # ==========================================================
-# APLICAR SEMÁFOROS A CADA AÑO
+# CREAR COPIA PARA MOSTRAR LOS SEMÁFOROS
 # ==========================================================
+
+reporte_ganancias_mostrar = reporte_ganancias.copy()
 
 cantidad_campus = len(reporte_ganancias) - 1
 
 
+# ==========================================================
+# APLICAR SEMÁFOROS A CADA AÑO
+# ==========================================================
+
 for columna in columnas_anios + ["TOTAL"]:
-    
+
+    # Mantener los valores originales numéricos
     valores = reporte_ganancias.loc[
         :cantidad_campus - 1,
         columna
-    ]
+    ].copy()
 
-    reporte_ganancias.loc[
+    # Convertir la columna de la copia a object
+    # para permitir texto + emojis
+    reporte_ganancias_mostrar[columna] = (
+        reporte_ganancias_mostrar[columna].astype("object")
+    )
+
+    # Aplicar semáforos a los campus
+    reporte_ganancias_mostrar.loc[
         :cantidad_campus - 1,
         columna
     ] = reporte_ganancias.loc[
@@ -999,23 +1013,21 @@ for columna in columnas_anios + ["TOTAL"]:
 # FORMATEAR TOTAL GENERAL
 # ==========================================================
 
-fila_total_index = len(reporte_ganancias) - 1
+fila_total_index = len(reporte_ganancias_mostrar) - 1
 
 for columna in columnas_anios + ["TOTAL"]:
-    
-    valor = (
-        reporte_ganancias.loc[
-            fila_total_index,
-            columna
-        ]
-    )
 
-    # Si ya fuera texto, no hacemos nada
-    if not isinstance(valor, str):
-        reporte_ganancias.loc[
-            fila_total_index,
-            columna
-        ] = f"${valor:,.2f}"
+    valor = reporte_ganancias.loc[
+        fila_total_index,
+        columna
+    ]
+
+    # El TOTAL GENERAL no lleva semáforo
+    # solamente formato de moneda
+    reporte_ganancias_mostrar.loc[
+        fila_total_index,
+        columna
+    ] = f"${valor:,.2f}"
 
 
 # ==========================================================
@@ -1023,7 +1035,7 @@ for columna in columnas_anios + ["TOTAL"]:
 # ==========================================================
 
 st.dataframe(
-    reporte_ganancias,
+    reporte_ganancias_mostrar,
     use_container_width=True,
     hide_index=True
 )
