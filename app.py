@@ -272,6 +272,8 @@ def mostrar_historial(trabajador):
         historial["Estado"] == "Pendiente"
     ).sum()
 
+    cantidad_prestamos = historial["ID Prestamo"].nunique()
+
     c1, c2, c3, c4 = st.columns(4)
 
     c1.metric(
@@ -296,7 +298,7 @@ def mostrar_historial(trabajador):
 
     st.markdown("---")
 
-    c5, c6 = st.columns(2)
+    c5, c6, c7 = st.columns(3)
 
     c5.metric(
         "✅ Cuotas Pagadas",
@@ -306,6 +308,11 @@ def mostrar_historial(trabajador):
     c6.metric(
         "⏳ Cuotas Pendientes",
         cuotas_pendientes
+    )
+
+    c7.metric(
+        "📄 Cantidad de Préstamos",
+    cantidad_prestamos
     )
 
     st.markdown("---")
@@ -325,6 +332,10 @@ def mostrar_historial(trabajador):
         ]
     ]
     .drop_duplicates()
+    .sort_values(
+        by="ID Prestamo",
+        ascending=False
+    )
     .copy()
 )
 
@@ -355,6 +366,8 @@ def mostrar_historial(trabajador):
         pendientes = (
             cuotas_prestamo["Estado"] == "Pendiente"
         ).sum()
+
+        cantidad_prestamos = historial["ID Prestamo"].nunique()
 
         # ==================================================
         # EXPANDER
@@ -401,7 +414,7 @@ def mostrar_historial(trabajador):
 
             st.markdown("---")
 
-            c1, c2 = st.columns(2)
+            c1, c2= st.columns(2)
 
             c1.metric(
                 "✅ Pagadas",
@@ -415,7 +428,14 @@ def mostrar_historial(trabajador):
 
             st.markdown("#### 📋 Detalle de Cuotas")
 
-            detalle = cuotas_prestamo.copy()
+            detalle = (
+                cuotas_prestamo
+                .copy()
+                .sort_values(
+                 by="Número",
+                 ascending=True
+                )
+            )
 
             # ----------------------------------------------
             # FORMATO FECHA
@@ -566,21 +586,19 @@ resumen_trabajador = resumen_trabajador.sort_values(
 
 resumen_trabajador["Historial"] = "📋 Ver"
 
-
 # ==========================================================
-# 🔁 ORDENAR COLUMNAS
+# 🔄 ORDEN DE COLUMNAS
 # ==========================================================
 
 resumen_trabajador = resumen_trabajador[
     [
+        "Historial",
         "Cuotas_Pendientes",
         "Nombre y Apellido",
         "Total_Prestado",
-        "Total_Ganancias",
-        "Historial"
+        "Total_Ganancias"
     ]
 ]
-
 
 # ==========================================================
 # 🎨 AGGRID
@@ -676,7 +694,8 @@ g_trab.configure_column(
 
 g_trab.configure_selection(
     selection_mode="single",
-    use_checkbox=False
+    use_checkbox=False,
+    suppressRowClickSelection=True
 )
 
 
@@ -688,6 +707,10 @@ g_trab.configure_pagination(
     paginationPageSize=20
 )
 
+
+# ==========================================================
+# CONSTRUIR TABLA
+# ==========================================================
 
 tbl_trab = g_trab.build()
 
@@ -715,6 +738,13 @@ respuesta_trabajadores = AgGrid(
     update_on=["selectionChanged"]
 )
 
+# ==========================================================
+# 🧠 ESTADO DEL HISTORIAL
+# ==========================================================
+
+if "trabajador_historial" not in st.session_state:
+    st.session_state.trabajador_historial = None
+
 
 # ==========================================================
 # 🪟 DETECTAR TRABAJADOR SELECCIONADO
@@ -724,15 +754,23 @@ filas_seleccionadas = respuesta_trabajadores.get(
     "selected_rows"
 )
 
+trabajador_seleccionado = None
+
 
 # ==========================================================
-# ⚠️ IMPORTANTE:
-# selected_rows puede ser DataFrame
+# 🔎 OBTENER TRABAJADOR
 # ==========================================================
 
 if filas_seleccionadas is not None:
 
-    if isinstance(filas_seleccionadas, pd.DataFrame):
+    # ------------------------------------------------------
+    # selected_rows como DataFrame
+    # ------------------------------------------------------
+
+    if isinstance(
+        filas_seleccionadas,
+        pd.DataFrame
+    ):
 
         if not filas_seleccionadas.empty:
 
@@ -742,11 +780,14 @@ if filas_seleccionadas is not None:
                 ]
             )
 
-            mostrar_historial(
-                trabajador_seleccionado
-            )
+    # ------------------------------------------------------
+    # selected_rows como lista
+    # ------------------------------------------------------
 
-    else:
+    elif isinstance(
+        filas_seleccionadas,
+        list
+    ):
 
         if len(filas_seleccionadas) > 0:
 
@@ -756,9 +797,29 @@ if filas_seleccionadas is not None:
                 ]
             )
 
-            mostrar_historial(
-                trabajador_seleccionado
-            )
+
+# ==========================================================
+# 🪟 ABRIR HISTORIAL
+# ==========================================================
+
+if trabajador_seleccionado is not None:
+
+    # ------------------------------------------------------
+    # SOLO ABRIR SI ES UN TRABAJADOR DIFERENTE
+    # ------------------------------------------------------
+
+    if (
+        st.session_state.trabajador_historial
+        != trabajador_seleccionado
+    ):
+
+        st.session_state.trabajador_historial = (
+            trabajador_seleccionado
+        )
+
+        mostrar_historial(
+            trabajador_seleccionado
+        )           
 
 # =========================
 # COMPARATIVO AÑO vs AÑO
