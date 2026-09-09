@@ -5,16 +5,19 @@ from st_aggrid import AgGrid, GridOptionsBuilder
 from st_aggrid.shared import JsCode
 from datetime import datetime
 from sqlalchemy import create_engine
-from streamlit_autorefresh import st_autorefresh   # ✅ Import correcto
 
 # =========================
 # CONFIGURACIÓN INICIAL
 # =========================
 st.set_page_config(page_title="Dashboard Préstamos", layout="wide")
 
+# ==========================================================
+# 🔄 ACTUALIZAR DATOS
+# ==========================================================
 
-# 🔄 Auto-refresco cada 50 segundos
-count = st_autorefresh(interval=50 * 1000, limit=None, key="datarefresh")
+if st.button("🔄 Actualizar datos", use_container_width=True):
+    st.cache_data.clear()
+    st.rerun()
 
 # --- Conexión a PostgreSQL usando Secrets ---
 DB_USER = "djangouser"
@@ -28,7 +31,6 @@ engine = create_engine(
 )
 
 st.success("✅ Conexión establecida con PostgreSQL en Render")
-st.caption(f"🔄 Datos actualizados automáticamente cada 30 segundos (recarga #{count})")
 
 # =========================
 # CONSULTA DE DATOS
@@ -494,6 +496,7 @@ def mostrar_historial(trabajador):
                 use_container_width=True,
                 hide_index=True
             )
+            
 
 
 # ==========================================================
@@ -714,6 +717,16 @@ g_trab.configure_pagination(
 
 tbl_trab = g_trab.build()
 
+# ==========================================================
+# 🧠 ESTADO DEL HISTORIAL
+# ==========================================================
+
+if "trabajador_historial" not in st.session_state:
+    st.session_state.trabajador_historial = None
+
+if "historial_abierto" not in st.session_state:
+    st.session_state.historial_abierto = False
+
 
 # ==========================================================
 # 📊 MOSTRAR TABLA
@@ -737,13 +750,6 @@ respuesta_trabajadores = AgGrid(
 
     update_on=["selectionChanged"]
 )
-
-# ==========================================================
-# 🧠 ESTADO DEL HISTORIAL
-# ==========================================================
-
-if "trabajador_historial" not in st.session_state:
-    st.session_state.trabajador_historial = None
 
 
 # ==========================================================
@@ -808,18 +814,15 @@ if trabajador_seleccionado is not None:
     # SOLO ABRIR SI ES UN TRABAJADOR DIFERENTE
     # ------------------------------------------------------
 
-    if (
-        st.session_state.trabajador_historial
-        != trabajador_seleccionado
-    ):
+    st.session_state.trabajador_historial = (
+        trabajador_seleccionado
+    )
 
-        st.session_state.trabajador_historial = (
-            trabajador_seleccionado
-        )
+    st.session_state.historial_abierto = True
 
-        mostrar_historial(
-            trabajador_seleccionado
-        )           
+    mostrar_historial(
+        trabajador_seleccionado
+    )      
 
 # =========================
 # COMPARATIVO AÑO vs AÑO
