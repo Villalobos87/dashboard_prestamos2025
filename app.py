@@ -148,17 +148,64 @@ st.markdown("---")
 # =========================
 # MÉTRICAS ADICIONALES
 # =========================
-total_cuota_cancelada = df[df["Estado"]=="Pagado"]["Cuota"].sum()
-Capital_Inicial       = 14000.00
-Ganancias_Entregadas  = 14817.36
-Efectivo              = total_cuota_cancelada + Capital_Inicial - total_prestado - Ganancias_Entregadas
-Pendiente_Recuperar   = df[df["Estado"]=="Pendiente"]["Cuota"].sum()
 
-c1,c2,c3,c4 = st.columns(4)
-c1.metric("💵 Yanina Orochena",f"${Efectivo:,.2f}")
-c2.metric("⏳ Por Recuperar" ,f"${Pendiente_Recuperar:,.2f}")
-c3.metric("💼 Capital"       ,f"${Capital_Inicial:,.2f}")
-c4.metric("📤 Rodrigo Gurdian",f"${Ganancias_Entregadas:,.2f}")
+# Total de cuotas canceladas
+total_cuota_cancelada = df[
+    df["Estado"] == "Pagado"
+]["Cuota"].sum()
+
+# Consultar capital y ganancias desde PostgreSQL
+query_saldos = """
+SELECT
+    COALESCE(SUM(
+        CASE
+            WHEN tipo = 'CAPITAL_INICIAL'
+            THEN credito - debito
+            ELSE 0
+        END
+    ), 0) AS capital,
+
+    COALESCE(SUM(
+        CASE
+            WHEN tipo = 'REMANENTE'
+            THEN debito - credito
+            ELSE 0
+        END
+    ), 0) AS ganancias
+
+FROM prestamos_movimientomanual
+WHERE activo = TRUE;
+"""
+
+df_saldos = pd.read_sql(query_saldos, engine)
+
+Capital_Inicial = float(df_saldos.iloc[0]["capital"])
+
+Ganancias_Entregadas = float(df_saldos.iloc[0]["ganancias"])
+
+# Efectivo disponible
+Efectivo = (
+    total_cuota_cancelada
+    + Capital_Inicial
+    - total_prestado
+    - Ganancias_Entregadas
+)
+
+# Pendiente por recuperar
+Pendiente_Recuperar = df[
+    df["Estado"] == "Pendiente"
+]["Cuota"].sum()
+
+# =========================
+# MOSTRAR INDICADORES
+# =========================
+
+c1, c2, c3, c4 = st.columns(4)
+
+c1.metric("💵 Yanina Orochena", f"${Efectivo:,.2f}")
+c2.metric("⏳ Por Recuperar", f"${Pendiente_Recuperar:,.2f}")
+c3.metric("💼 Capital", f"${Capital_Inicial:,.2f}")
+c4.metric("📤 Rodrigo Gurdian", f"${Ganancias_Entregadas:,.2f}")
 
 st.markdown("---")
 
